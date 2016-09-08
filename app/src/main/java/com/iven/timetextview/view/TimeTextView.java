@@ -28,6 +28,8 @@ public class TimeTextView extends TextView {
     private final String TAG = "TimeTextView";
     private boolean isStyleable = false;//设置是否对倒计时的时间进行特殊颜色处理
     private int partOfTextViewColor;//倒计时的数字部分的颜色
+    private onCountDownListener listener;//事件监听接口
+    private boolean isListener;
 
     public TimeTextView(Context context) {
         super(context);
@@ -38,14 +40,19 @@ public class TimeTextView extends TextView {
         super(context, attrs);
         endInfo = "";
     }
+    public interface onCountDownListener{
+        void onTimeOverListener();
+    }
 
     /**
      * 设置剩余的时间，用来实现倒计时的时间
-     *
-     * @param leftTime long型的剩余时间
+     * @param leftTime long型的倒计时时间
+     * @param listener 倒计时结束的事件监听
      */
-    public void setLeftTime(long leftTime) {
+    public void setLeftTime(long leftTime,boolean isListener,onCountDownListener listener) {
         this.leftTime = leftTime;
+        this.isListener = isListener;
+        this.listener = listener;
         setMain();
     }
 
@@ -53,10 +60,11 @@ public class TimeTextView extends TextView {
      * 设置倒计时的结束时间，实现倒计时功能
      * @param endTime 倒计时结束时间
      */
-    public void setEndTime(long endTime){
+    public void setEndTime(long endTime,boolean isListener){
         this.endTime = endTime;
+        this.isListener = isListener;
         leftTime = endTime - getSystemCurrentTime();
-        setLeftTime(leftTime);
+        setLeftTime(leftTime,isListener,listener);
     }
 
     /**
@@ -101,6 +109,9 @@ public class TimeTextView extends TextView {
                         isEnd = true;//设置为已经结束了Boolean
                         isRun = false;//设置为停止运行
                         TimeTextView.this.setText(endInfo);
+                        if (isListener) {
+                            listener.onTimeOverListener();
+                        }
                     }
                 }.start();
             } else {
@@ -115,7 +126,6 @@ public class TimeTextView extends TextView {
                         ssb.setSpan(new ForegroundColorSpan(partOfTextViewColor),lastIndexOf+7,lastIndexOf+9, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                         ssb.setSpan(new ForegroundColorSpan(partOfTextViewColor),lastIndexOf+10,lastIndexOf+12, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                         TimeTextView.this.setText(ssb);
-
                     }
 
                     @Override
@@ -123,6 +133,9 @@ public class TimeTextView extends TextView {
                         isEnd = true;//设置为已经结束了Boolean
                         isRun = false;//设置为停止运行
                         TimeTextView.this.setText(endInfo);
+                        if (isListener) {
+                            listener.onTimeOverListener();
+                        }
                     }
                 }.start();
             }
